@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>2026년 10월 데일리 체크리스트</title>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--text:#202020;--muted:#888;--line:#e6e6e1;--accent:#222}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:24px 14px 50px}
+h1{font-size:24px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.week,.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.week div{text-align:center;font-size:12px;color:var(--muted);padding:5px}
+.day{background:var(--card);border:1px solid var(--line);border-radius:14px;min-height:155px;padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.day.today{outline:2px solid var(--accent)}.date{font-weight:700;font-size:14px;margin-bottom:8px}.empty{background:transparent;border:0;box-shadow:none}
+.todo{display:flex;align-items:flex-start;gap:6px;font-size:12px;margin:6px 0}.todo input{margin-top:2px}.todo.done span{text-decoration:line-through;color:#aaa}
+.del{margin-left:auto;border:0;background:none;color:#bbb;padding:0 2px;font-size:14px}
+.add{display:flex;gap:4px;margin-top:8px}.add input{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:7px;font-size:12px}.add button{border:0;border-radius:8px;background:#222;color:#fff;padding:0 9px}
+@media(max-width:720px){.wrap{padding:18px 10px 40px}.week{display:none}.cal{grid-template-columns:1fr}.empty{display:none}.day{min-height:120px}.date{font-size:16px}.todo,.add input{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>2026년 10월 · Daily Checklist</h1>
+<div class="sub">체크하면 취소선 처리 · 새 할 일 추가/삭제 · 이 브라우저에 자동 저장</div>
+<div class="week"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+<div id="calendar" class="cal"></div>
+</div>
+<script>
+const KEY='daily-calendar-2026-10-v1';
+const seed={
+ '2026-10-02':[
+  {t:'집에 들어가서 짐 정리하기',d:false},
+  {t:'세탁기 돌아가고 있는지 확인하기',d:false},
+  {t:'품의된 계약서 다운로드받아 살펴보고 내용 정리하기',d:false},
+  {t:'밥 먹기',d:false},
+  {t:'「피로사회」 읽기',d:false}
+ ]
+};
+let data;
+try{data=JSON.parse(localStorage.getItem(KEY))||seed}catch(e){data=seed}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+const cal=document.getElementById('calendar');
+const first=new Date(2026,9,1).getDay();
+for(let i=0;i<first;i++){let e=document.createElement('div');e.className='day empty';cal.appendChild(e)}
+for(let n=1;n<=31;n++){
+ const key=`2026-10-${String(n).padStart(2,'0')}`;
+ const box=document.createElement('section'); box.className='day'+(n===2?' today':'');
+ box.innerHTML=`<div class="date">10월 ${n}일</div><div class="items"></div>
+ <div class="add"><input placeholder="할 일 추가" aria-label="${n}일 할 일 추가"><button>＋</button></div>`;
+ const items=box.querySelector('.items'), inp=box.querySelector('input'), btn=box.querySelector('button');
+ function render(){
+   items.innerHTML='';
+   (data[key]||[]).forEach((o,idx)=>{
+     const row=document.createElement('label'); row.className='todo'+(o.d?' done':'');
+     row.innerHTML=`<input type="checkbox" ${o.d?'checked':''}><span>${esc(o.t)}</span><button class="del" type="button">×</button>`;
+     row.querySelector('input').onchange=e=>{o.d=e.target.checked;save();render()};
+     row.querySelector('.del').onclick=e=>{e.preventDefault();data[key].splice(idx,1);save();render()};
+     items.appendChild(row);
+   });
+ }
+ function add(){
+   const t=inp.value.trim(); if(!t)return;
+   (data[key]??=[]).push({t,d:false}); inp.value='';save();render();
+ }
+ btn.onclick=add; inp.addEventListener('keydown',e=>{if(e.key==='Enter')add()}); render(); cal.appendChild(box);
+}
+save();
+</script>
+</body>
+</html>
